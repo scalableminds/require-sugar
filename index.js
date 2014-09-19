@@ -15,24 +15,26 @@ var matcher = {
 };
 
 
-function requireSugar(source, options) {
-  source = source.toString();
-  options = options || {};
-  var isCoffee = options.coffee;
-  var indent = options.indent || "  ";
+function requireSugar(options) {
+  return function(source) {
+    source = source.toString();
+    options = options || {};
+    var isCoffee = options.coffee;
+    var indent = options.indent || "  ";
 
-  var commentMatcher = matcher.getComment(isCoffee);
-  var commentMatch = commentMatcher.exec(source);
-  if (!commentMatch) {
-    return source;
+    var commentMatcher = matcher.getComment(isCoffee);
+    var commentMatch = commentMatcher.exec(source);
+    if (!commentMatch) {
+      return source;
+    }
+
+    var defines = getDefines(commentMatch);
+
+    var cleanedSource = cleanSource(source, commentMatch, indent);
+    var parameters = getDefineParameters(defines.sources, defines.targets);
+
+    return wrapInDefine(cleanedSource, parameters, isCoffee);
   }
-
-  var defines = getDefines(commentMatch);
-
-  var cleanedSource = cleanSource(source, commentMatch, indent);
-  var parameters = getDefineParameters(defines.sources, defines.targets);
-
-  return wrapInDefine(cleanedSource, parameters, isCoffee);
 }
 
 
