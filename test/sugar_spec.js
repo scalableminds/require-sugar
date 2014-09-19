@@ -16,13 +16,13 @@ describe("require-sugar", function() {
     var log = [];
     var logFn = function() {
       log.push.apply(log, arguments);
-    }
+    };
 
     var define = function(arr, cb) {
       cb.apply(null, arr);
-    }
+    };
 
-    sugaredCode = requireSugar(source);
+    var sugaredCode = requireSugar(source);
     eval(sugaredCode);
 
     expect(log).toEqual(["s/1", "s2", "s"]);
@@ -35,9 +35,7 @@ describe("require-sugar", function() {
       " s/1 : t1",
       " s2 : t2",
       " s : t3",
-      " */",
-      "// other comment",
-      "logFn(t1, t2, t3)"
+      " */"
     ].join("\n");
 
     expect(requireSugar(source)).toEqual(source);
