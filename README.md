@@ -1,4 +1,4 @@
-require-sugar [![build status](https://secure.travis-ci.org/scalable-minds/require-sugar.png)](http://travis-ci.org/scalable-minds/require-sugar)
+require-sugar [![build status](https://secure.travis-ci.org/scalableminds/require-sugar.png)](http://travis-ci.org/scalableminds/require-sugar)
 =================
 
 
