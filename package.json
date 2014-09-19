@@ -1,0 +1,28 @@
+{
+  "name": "require-sugar",
+  "description": "",
+  "tags": [],
+  "keywords": [
+    "gulpfriendly"
+  ],
+  "version": "0.1.0",
+  "author": {
+    "name": "Philipp Otto",
+    "email": "philipp.otto@scm.io"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/scalableminds/require-sugar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/scalableminds/require-sugar/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jasmine-node": "^1.14.5"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/jasmine-node test"
+  },
+  "license": "MIT"
+}
