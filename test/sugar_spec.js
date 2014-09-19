@@ -1,4 +1,5 @@
 var requireSugar = require("../index.js");
+var coffee = require("coffee-script");
 
 describe("require-sugar", function() {
 
@@ -97,34 +98,33 @@ describe("require-sugar", function() {
     expect(called).toBe(true);
   });
 
+  it("sugars coffee code", function() {
 
-  it("returns the defined module", function() {
     var source = [
-      '/* define',
-      'jquery : $',
-      'backbone : Backbone',
-      'lib/uber_router : UberRouter',
-      ' */',
-      'var __hasProp = {}.hasOwnProperty,',
-      '  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };',
-      '',
-      '(function() {',
-      '  var Router = true;',
-      '  return Router;',
-      '})();'
+      "### define",
+      "a : b",
+      "c : d",
+      "###",
+      "logFn(b, d)",
+      "class A",
+      "  constructor: ->"
     ].join("\n");
 
+    var log = [];
+    var logFn = function() {
+      log.push.apply(log, arguments);
+    };
 
     var module = null;
-
     var define = function(arr, cb) {
       module = cb.apply(null, arr);
     };
 
-    var sugaredCode = requireSugar(source);
-    eval(sugaredCode);
+    var sugaredCode = requireSugar(source, {coffee: true});
+    eval(coffee.compile(sugaredCode));
 
-    expect(module).toNotEqual(null);
-
-  })
+    expect(log).toEqual(["a", "c"]);
+    expect(module).toNotBe(undefined);
+    expect(new module()).toNotBe(undefined);
+  });
 });

@@ -17,9 +17,11 @@
   "bugs": {
     "url": "https://github.com/scalableminds/require-sugar/issues"
   },
-  "dependencies": {},
+  "dependencies": {
+  },
   "devDependencies": {
-    "jasmine-node": "^1.14.5"
+    "jasmine-node": "^1.14.5",
+    "coffee-script": "^1.8.0"
   },
   "scripts": {
     "test": "node_modules/.bin/jasmine-node test"
