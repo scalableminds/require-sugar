@@ -1,6 +1,7 @@
 var matcher = {
   jsComment : /^\s*(\/\*\s*define([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)/,
   coffeeComment : /^\s*(###\s*define([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*?###)/,
+  iife : /^(.|\n)*?(\s*\(function\(\)\s*{)((.|\n)*)(}\)((\.call\(this\))|(\(\)));[\s\n]*)$/,
   getDependencyLine : function(global) {
     var dependencyPath = "\\s*([^\"\\n\\s\\:]+)\\s*";
     return new RegExp(dependencyPath + ":" + dependencyPath, global ? "gm" : "m");
@@ -101,8 +102,7 @@ function getDefineParameters(sources, targets) {
 
 
 function unpackIIFE(source) {
-  var iffeeMatcher = /^(.|\n)*?(\s*\(function\(\)\s*{)((.|\n)*)(}\)((\.call\(this\))|(\(\)));[\s\n]*)$/;
-  var iffeeMatch = iffeeMatcher.exec(source);
+  var iffeeMatch = matcher.iife.exec(source);
 
   if (iffeeMatch) {
     return iffeeMatch[3];
