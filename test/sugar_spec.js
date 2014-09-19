@@ -96,4 +96,35 @@ describe("require-sugar", function() {
     expect(log).toEqual([]);
     expect(called).toBe(true);
   });
+
+
+  it("returns the defined module", function() {
+    var source = [
+      '/* define',
+      'jquery : $',
+      'backbone : Backbone',
+      'lib/uber_router : UberRouter',
+      ' */',
+      'var __hasProp = {}.hasOwnProperty,',
+      '  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };',
+      '',
+      '(function() {',
+      '  var Router = true;',
+      '  return Router;',
+      '})();'
+    ].join("\n");
+
+
+    var module = null;
+
+    var define = function(arr, cb) {
+      module = cb.apply(null, arr);
+    };
+
+    var sugaredCode = requireSugar(source);
+    eval(sugaredCode);
+
+    expect(module).toNotEqual(null);
+
+  })
 });

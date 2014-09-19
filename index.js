@@ -1,9 +1,9 @@
 function unpackIIFE(source) {
-  var iffeeMatcher = /^(\s*\(function\(\)\s*{)((.|\n)*)(}\)\.call\(this\);[\s\n]*)$/;
+  var iffeeMatcher = /^(.|\n)*?(\s*\(function\(\)\s*{)((.|\n)*)(}\)((\.call\(this\))|(\(\)));[\s\n]*)$/;
   var iffeeMatch = iffeeMatcher.exec(source);
 
   if (iffeeMatch) {
-    return iffeeMatch[2];
+    return iffeeMatch[3];
   } else {
     return source;
   }
@@ -41,7 +41,7 @@ function requireSugar(source) {
     var sourceParameters = sources.map(function(s) { return '"' + s + '"';}).join(", ");
     var targetParameters = targets.join(", ");
 
-    return "define([" + sourceParameters + "], function(" + targetParameters + ") {\n" + unpackedSource + "\n})";
+    return "define([" + sourceParameters + "], function(" + targetParameters + ") {\n" + unpackedSource + "\n});";
   } else {
     return source;
   }
