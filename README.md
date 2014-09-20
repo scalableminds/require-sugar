@@ -29,3 +29,6 @@ gulp.src(options.src.scripts)
   .pipe($.coffee())
   .pipe(gulp.dest(options.dest.scripts));
 ```
+
+## License
+MIT &copy; scalable minds 2014
