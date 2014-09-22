@@ -24,7 +24,7 @@ describe("require-sugar", function() {
       cb.apply(null, arr);
     };
 
-    var sugaredCode = requireSugar()(source);
+    var sugaredCode = requireSugar()(source, "javascript.js");
     eval(sugaredCode);
 
     expect(log).toEqual(["s/1", "s2", "s"]);
@@ -40,7 +40,7 @@ describe("require-sugar", function() {
       " */"
     ].join("\n");
 
-    expect(requireSugar()(source)).toEqual(source);
+    expect(requireSugar()(source, "javascript.js")).toEqual(source);
   });
 
   it("unpacks an IIFE", function() {
@@ -66,7 +66,7 @@ describe("require-sugar", function() {
       cb.apply(null, arr);
     };
 
-    var sugaredCode = requireSugar()(source);
+    var sugaredCode = requireSugar()(source, "javascript.js");
     eval(sugaredCode);
 
     expect(log).toEqual(["s/1"]);
@@ -91,7 +91,7 @@ describe("require-sugar", function() {
       cb.apply(null, arr);
     };
 
-    var sugaredCode = requireSugar()(source);
+    var sugaredCode = requireSugar()(source, "javascript.js");
     eval(sugaredCode);
 
     expect(log).toEqual([]);
@@ -120,7 +120,7 @@ describe("require-sugar", function() {
       module = cb.apply(null, arr);
     };
 
-    var sugaredCode = requireSugar({coffee: true})(source);
+    var sugaredCode = requireSugar()(source, "coffee.coffee");
     eval(coffee.compile(sugaredCode));
 
     expect(log).toEqual(["a", "c"]);

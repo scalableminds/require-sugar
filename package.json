@@ -18,6 +18,7 @@
     "url": "https://github.com/scalableminds/require-sugar/issues"
   },
   "dependencies": {
+    "path": "^0.4.9"
   },
   "devDependencies": {
     "jasmine-node": "^1.14.5",

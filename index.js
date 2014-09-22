@@ -1,3 +1,5 @@
+var path = require("path");
+
 var matcher = {
   jsComment : /^\s*(\/\*\s*define([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)/,
   coffeeComment : /^\s*(###\s*define([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*?###)/,
@@ -17,10 +19,15 @@ var matcher = {
 
 
 function requireSugar(options) {
-  return function(source) {
+  return function(source, filename) {
     source = source.toString();
     options = options || {};
-    var isCoffee = options.coffee;
+    if (filename === undefined) {
+      console.warn("No filename provided. JavaScript is assumed.");
+      filename = "";
+    }
+
+    var isCoffee = path.extname(filename) == ".coffee";
     var indent = options.indent || "  ";
 
     var commentMatcher = matcher.getComment(isCoffee);

@@ -20,12 +20,13 @@ gulp.src(options.src.scripts)
   .pipe(gulp.dest(options.dest.scripts));
 ```
 
-For CoffeeScript:
+CoffeeScript files should be processed as coffee-files and not as js-files.
+This leverages CoffeeScript's feature that the last statement is always returned.
 
 ```javascript
 var map = require("vinyl-map");
 gulp.src(options.src.scripts)
-  .pipe(map(requireSugar({coffee: true})))        // <--
+  .pipe(map(requireSugar()))                      // <--
   .pipe($.coffee())
   .pipe(gulp.dest(options.dest.scripts));
 ```
