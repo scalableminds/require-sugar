@@ -42,7 +42,7 @@ function requireSugar(options) {
     var parameters = getDefineParameters(defines.sources, defines.targets);
 
     return wrapInDefine(cleanedSource, parameters, isCoffee);
-  }
+  };
 }
 
 
@@ -50,7 +50,7 @@ function getDefines(commentMatch) {
   var defines = {
     sources: [],
     targets: []
-  }
+  };
 
   var matches = commentMatch[0].match(matcher.getDependencyLine(true)) || [];
 
@@ -70,14 +70,18 @@ function cleanSource(source, commentMatch, indent) {
   // removes the define comment, unpacks potential IIFE and indents the code
 
   var cleanedSource =
-    source.slice(0, commentMatch.index)
-    + source.slice(commentMatch.index
-    + commentMatch[0].length);
+    source.slice(0, commentMatch.index) +
+    source.slice(commentMatch.index +
+    commentMatch[0].length);
 
   cleanedSource = unpackIIFE(cleanedSource);
   cleanedSource = cleanedSource
     .split("\n")
-    .map(function(line) { return indent + line;})
+    .map(function(line) {
+      if (line === "")
+        return line;
+      return indent + line;
+    })
     .join("\n");
 
   return cleanedSource;
@@ -103,7 +107,8 @@ function getDefineParameters(sources, targets) {
         .map(function(s) { return '"' + s + '"';})
         .join(", "),
 
-    targets :targets.join(", ")
+    targets :
+      targets.join(", ")
   };
 }
 
