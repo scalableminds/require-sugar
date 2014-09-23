@@ -1,4 +1,5 @@
 var requireSugar = require("../index.js");
+var sugar = requireSugar.sugar;
 var coffee = require("coffee-script");
 
 describe("require-sugar", function() {
@@ -30,7 +31,7 @@ describe("require-sugar", function() {
       " */"
     ].join("\n");
 
-    expect(requireSugar()(source, "javascript.js")).toEqual(source);
+    expect(sugar()(source, "javascript.js")).toEqual(source);
   });
 
   it("unpacks an IIFE", function() {
@@ -99,7 +100,7 @@ describe("require-sugar", function() {
       module = cb.apply(null, arr);
     };
 
-    var sugaredCode = requireSugar()(source, fileName);
+    var sugaredCode = sugar()(source, fileName);
 
     if (fileName.indexOf(".coffee") > -1) {
       sugaredCode = coffee.compile(sugaredCode);

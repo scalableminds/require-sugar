@@ -14,9 +14,8 @@ $ npm install require-sugar
 
 For JavaScript:
 ```javascript
-var map = require("vinyl-map");
 gulp.src(options.src.scripts)
-  .pipe(map(requireSugar()))                      // <--
+  .pipe(requireSugar())                      // <--
   .pipe(gulp.dest(options.dest.scripts));
 ```
 
@@ -24,9 +23,8 @@ CoffeeScript files should be processed as coffee-files and not as js-files.
 This leverages CoffeeScript's feature that the last statement is always returned.
 
 ```javascript
-var map = require("vinyl-map");
 gulp.src(options.src.scripts)
-  .pipe(map(requireSugar()))                      // <--
+  .pipe(requireSugar())                      // <--
   .pipe($.coffee())
   .pipe(gulp.dest(options.dest.scripts));
 ```

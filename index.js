@@ -1,4 +1,7 @@
 var path = require("path");
+var through = require('through2');
+var applySourceMap = require('vinyl-sourcemaps-apply');
+var sourceMap = require('source-map');
 
 var matcher = {
   jsComment : /^\s*(\/\*\s*define([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)/,
@@ -17,8 +20,7 @@ var matcher = {
   }
 };
 
-
-function requireSugar(options) {
+function sugar(options) {
   return function(source, filename) {
     source = source.toString();
     options = options || {};
@@ -28,7 +30,7 @@ function requireSugar(options) {
     }
 
     var isCoffee = path.extname(filename) == ".coffee";
-    var indent = options.indent || "  ";
+    var indent = getIndent(options);
 
     var commentMatcher = matcher.getComment(isCoffee);
     var commentMatch = commentMatcher.exec(source);
@@ -45,6 +47,9 @@ function requireSugar(options) {
   };
 }
 
+function getIndent(options) {
+  return options.indent || "  ";
+}
 
 function getDefines(commentMatch) {
   var defines = {
@@ -123,5 +128,64 @@ function unpackIIFE(source) {
   }
 }
 
+function requireSugar(options) {
+
+  return through.obj(transform);
+
+  function getMap(fileName, sourceName, fileContents) {
+    var map = new sourceMap.SourceMapGenerator({
+      file: fileName
+    });
+
+    var lineCount = fileContents.toString().split("\n").length;
+    var offsets = {
+      original: 4,
+      generated: 2
+    };
+
+    for (var i = 1; i <= lineCount - offsets.original; i++) {
+      map.addMapping({
+        original: {
+          line: offsets.original + i,
+          column: 1
+        },
+        generated: {
+          line: offsets.generated + i,
+          column: 1 + getIndent(options).length,
+        },
+        source: sourceName
+      });
+    }
+
+    return map.toString();
+  }
+
+  function transform(file, encoding, callback) {
+    if (!options) {
+      options = {};
+    }
+    console.log("file.sourceMap",  file.sourceMap);
+    if (file.sourceMap) {
+      options.makeSourceMaps = true;
+    }
+
+    var filename = path.basename(file.path);
+    var code = sugar(options)(file.contents, filename);
+
+    file.contents = new Buffer(code);
+
+    if (file.sourceMap) {
+      var map = getMap(filename, file.path, file.contents)
+      applySourceMap(file, map);
+    }
+
+    this.push(file);
+    callback();
+  }
+
+};
+
 requireSugar.unpackIIFE = unpackIIFE;
+requireSugar.sugar = sugar;
+
 module.exports = requireSugar;
