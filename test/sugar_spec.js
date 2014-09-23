@@ -13,21 +13,11 @@ describe("require-sugar", function() {
       " */",
       "// other comment",
       "logFn(t1, t2, t3);"
-    ].join("\n");
+    ];
 
-    var log = [];
-    var logFn = function() {
-      log.push.apply(log, arguments);
-    };
-
-    var define = function(arr, cb) {
-      cb.apply(null, arr);
-    };
-
-    var sugaredCode = requireSugar()(source, "javascript.js");
-    eval(sugaredCode);
-
-    expect(log).toEqual(["s/1", "s2", "s"]);
+    sugarRun(source, "javascript.js", function (called, log, module) {
+      expect(log).toEqual(["s/1", "s2", "s"]);
+    });
   });
 
   it("ignores a define block which is not at the top of the file", function() {
@@ -55,21 +45,11 @@ describe("require-sugar", function() {
       " s/1 : t1",
       " */",
       "(function() { logFn(t1); }).call(this);",
-    ].join("\n");
+    ];
 
-    var log = [];
-    var logFn = function() {
-      log.push.apply(log, arguments);
-    };
-
-    var define = function(arr, cb) {
-      cb.apply(null, arr);
-    };
-
-    var sugaredCode = requireSugar()(source, "javascript.js");
-    eval(sugaredCode);
-
-    expect(log).toEqual(["s/1"]);
+    sugarRun(source, "javascript.js", function (called, log, module) {
+      expect(log).toEqual(["s/1"]);
+    });
   });
 
   it("sugars empty define", function() {
@@ -77,29 +57,15 @@ describe("require-sugar", function() {
       "/* define",
       "*/",
       "logFn.apply(null, arguments);",
-    ].join("\n");
+    ];
 
-
-    var log = [];
-    var called = false;
-    var logFn = function() {
-      log.push.apply(log, arguments);
-      called = true;
-    };
-
-    var define = function(arr, cb) {
-      cb.apply(null, arr);
-    };
-
-    var sugaredCode = requireSugar()(source, "javascript.js");
-    eval(sugaredCode);
-
-    expect(log).toEqual([]);
-    expect(called).toBe(true);
+    sugarRun(source, "javascript.js", function(called, log, module) {
+      expect(log).toEqual([]);
+      expect(called).toBe(true);
+    });
   });
 
   it("sugars coffee code", function() {
-
     var source = [
       "### define",
       "a : b",
@@ -108,11 +74,24 @@ describe("require-sugar", function() {
       "logFn(b, d)",
       "class A",
       "  constructor: ->"
-    ].join("\n");
+    ];
+
+    sugarRun(source, "coffee.coffee", function(called, log, module) {
+      expect(log).toEqual(["a", "c"]);
+      expect(module).toNotBe(undefined);
+      expect(new module()).toNotBe(undefined);
+    });
+  });
+
+  function sugarRun(sourceArray, fileName, callback) {
+
+    var source = sourceArray.join("\n");
 
     var log = [];
+    var called = false;
     var logFn = function() {
       log.push.apply(log, arguments);
+      called = true;
     };
 
     var module = null;
@@ -120,11 +99,14 @@ describe("require-sugar", function() {
       module = cb.apply(null, arr);
     };
 
-    var sugaredCode = requireSugar()(source, "coffee.coffee");
-    eval(coffee.compile(sugaredCode));
+    var sugaredCode = requireSugar()(source, fileName);
 
-    expect(log).toEqual(["a", "c"]);
-    expect(module).toNotBe(undefined);
-    expect(new module()).toNotBe(undefined);
-  });
+    if (fileName.indexOf(".coffee") > -1) {
+      sugaredCode = coffee.compile(sugaredCode);
+    }
+
+    eval(sugaredCode);
+
+    callback(called, log, module);
+  }
 });
