@@ -2,10 +2,11 @@ var path = require("path");
 var through = require('through2');
 var applySourceMap = require('vinyl-sourcemaps-apply');
 var sourceMap = require('source-map');
+var charProps = require('char-props');
 
 var matcher = {
-  jsComment : /^\s*(\/\*\s*define([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/)/,
-  coffeeComment : /^\s*(###\s*define([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*?###)/,
+  jsComment : /^\s*(\/\*\s*define([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/\n)/,
+  coffeeComment : /^\s*(###\s*define([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*?###\n)/,
   iife : /^(.|\n)*?(\s*\(function\(\)\s*{)((.|\n)*)(}\)((\.call\(this\))|(\(\)));[\s\n]*)$/,
   getDependencyLine : function(global) {
     var dependencyPath = "\\s*([^\"\\n\\s\\:]+)\\s*";
@@ -29,7 +30,7 @@ function sugar(options) {
       filename = "";
     }
 
-    var isCoffee = path.extname(filename) == ".coffee";
+    var isCoffee = isFileCoffee(filename);
     var indent = getIndent(options);
 
     var commentMatcher = matcher.getComment(isCoffee);
@@ -49,6 +50,10 @@ function sugar(options) {
 
 function getIndent(options) {
   return options.indent || "  ";
+}
+
+function isFileCoffee(filename) {
+  return path.extname(filename) == ".coffee";
 }
 
 function getDefines(commentMatch) {
@@ -76,8 +81,7 @@ function cleanSource(source, commentMatch, indent) {
 
   var cleanedSource =
     source.slice(0, commentMatch.index) +
-    source.slice(commentMatch.index +
-    commentMatch[0].length);
+    source.slice(commentMatch.index + commentMatch[0].length);
 
   cleanedSource = unpackIIFE(cleanedSource);
   cleanedSource = cleanedSource
@@ -128,54 +132,78 @@ function unpackIIFE(source) {
   }
 }
 
+function getCoordinates(haystack, needle) {
+  var needleIndex;
+  if ((typeof needle) === "number") {
+    // needle is already the index
+    needleIndex = needle;
+  } else {
+    needleIndex = haystack.indexOf(needle);
+  }
+
+  var props = charProps(haystack);
+  return {
+    line: props.lineAt(needleIndex) + 1,
+    column: props.columnAt(needleIndex) + 1
+  };
+}
+
+function getMap(fileName, sourceName, originalSource, generatedSource, options) {
+  var map = new sourceMap.SourceMapGenerator({
+    file: fileName
+  });
+
+  var defineToken = "define([";
+
+  var commentMatcher = matcher.getComment(isFileCoffee(fileName));
+  var commentMatch = commentMatcher.exec(originalSource);
+  var commentEndIndex = commentMatch.index + commentMatch[0].length;
+
+  var orgCoords = getCoordinates(originalSource, commentEndIndex);
+  var genCoords = getCoordinates(generatedSource, defineToken);
+
+  var offset = orgCoords.line - (genCoords.line + 1);
+
+  var lineCount = generatedSource.split("\n").length;
+  for (var i = genCoords.line + 1; i < lineCount; i++) {
+    map.addMapping({
+      original: {
+        line: i + offset,
+        column: 1
+      },
+      generated: {
+        line: i,
+        column: 1 + getIndent(options).length,
+      },
+      source: sourceName
+    });
+  }
+
+  return map.toString();
+}
+
 function requireSugar(options) {
 
   return through.obj(transform);
 
-  function getMap(fileName, sourceName, fileContents) {
-    var map = new sourceMap.SourceMapGenerator({
-      file: fileName
-    });
-
-    var lineCount = fileContents.toString().split("\n").length;
-    var offsets = {
-      original: 4,
-      generated: 2
-    };
-
-    for (var i = 1; i <= lineCount - offsets.original; i++) {
-      map.addMapping({
-        original: {
-          line: offsets.original + i,
-          column: 1
-        },
-        generated: {
-          line: offsets.generated + i,
-          column: 1 + getIndent(options).length,
-        },
-        source: sourceName
-      });
-    }
-
-    return map.toString();
-  }
 
   function transform(file, encoding, callback) {
     if (!options) {
       options = {};
     }
-    console.log("file.sourceMap",  file.sourceMap);
+
     if (file.sourceMap) {
       options.makeSourceMaps = true;
     }
 
     var filename = path.basename(file.path);
-    var code = sugar(options)(file.contents, filename);
+    var originalSource = file.contents.toString();
+    var generatedSource = sugar(options)(file.contents, filename);
 
-    file.contents = new Buffer(code);
+    file.contents = new Buffer(generatedSource);
 
     if (file.sourceMap) {
-      var map = getMap(filename, file.path, file.contents)
+      var map = getMap(filename, file.path, originalSource, generatedSource, options);
       applySourceMap(file, map);
     }
 
@@ -185,7 +213,9 @@ function requireSugar(options) {
 
 };
 
-requireSugar.unpackIIFE = unpackIIFE;
 requireSugar.sugar = sugar;
+requireSugar._getMap = getMap;
+requireSugar._unpackIIFE = unpackIIFE;
+requireSugar._getCoordinates = getCoordinates;
 
 module.exports = requireSugar;

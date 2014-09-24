@@ -1,6 +1,8 @@
 var requireSugar = require("../index.js");
 var sugar = requireSugar.sugar;
 var coffee = require("coffee-script");
+var sourceMap = require('source-map');
+var charProps = require('char-props');
 
 describe("require-sugar", function() {
 
@@ -36,7 +38,7 @@ describe("require-sugar", function() {
 
   it("unpacks an IIFE", function() {
     var source = "(function() { var a; }).call(this);";
-    var unpacked = requireSugar.unpackIIFE(source);
+    var unpacked = requireSugar._unpackIIFE(source);
     expect(unpacked).toEqual(" var a; ");
   });
 
@@ -82,6 +84,36 @@ describe("require-sugar", function() {
       expect(module).toNotBe(undefined);
       expect(new module()).toNotBe(undefined);
     });
+  });
+
+  it("generates source maps", function() {
+
+    var orgSource = [
+      "/* define",
+      "a : lookupToken",
+      "*/",
+      "1 + 1;",
+      "lookupToken();",
+      "1 + 1"
+    ].join("\n");
+
+    var lookupToken = "lookupToken();";
+    var genSource = requireSugar.sugar()(orgSource);
+    var map = requireSugar._getMap("fileName", "sourceName", orgSource, genSource, {});
+
+
+    var orgCoords = requireSugar._getCoordinates(orgSource, lookupToken);
+    var genCoords = requireSugar._getCoordinates(genSource, lookupToken);
+
+    var smc = new sourceMap.SourceMapConsumer(map);
+    var calculatedCoords = smc.originalPositionFor({
+      line: genCoords.line,
+      column: genCoords.column
+    });
+
+    expect(orgCoords.line).toEqual(calculatedCoords.line);
+    expect(orgCoords.column).toEqual(calculatedCoords.column);
+
   });
 
   function sugarRun(sourceArray, fileName, callback) {
