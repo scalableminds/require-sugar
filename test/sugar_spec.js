@@ -101,7 +101,6 @@ describe("require-sugar", function() {
     var genSource = requireSugar.sugar()(orgSource);
     var map = requireSugar._getMap("fileName", "sourceName", orgSource, genSource, {});
 
-
     var orgCoords = requireSugar._getCoordinates(orgSource, lookupToken);
     var genCoords = requireSugar._getCoordinates(genSource, lookupToken);
 

@@ -202,7 +202,7 @@ function requireSugar(options) {
 
     file.contents = new Buffer(generatedSource);
 
-    if (file.sourceMap) {
+    if (file.sourceMap && originalSource != generatedSource) {
       var map = getMap(filename, file.path, originalSource, generatedSource, options);
       applySourceMap(file, map);
     }
