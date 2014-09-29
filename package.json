@@ -1,11 +1,11 @@
 {
   "name": "require-sugar",
-  "description": "",
+  "description": "Syntactic sugar for defining AMD modules",
   "tags": [],
   "keywords": [
     "gulpfriendly"
   ],
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "Philipp Otto",
     "email": "philipp.otto@scm.io"
