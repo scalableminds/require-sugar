@@ -1,6 +1,27 @@
 require-sugar [![build status](https://secure.travis-ci.org/scalableminds/require-sugar.png)](http://travis-ci.org/scalableminds/require-sugar)
 =================
 
+require-sugar is a simple preprocessor for JavaScript and CoffeeScript which provides a custom syntax for defining dependencies for RequireJS.
+
+## Example transformation
+
+Original source:
+```
+### define
+jquery : $
+underscore : _
+###
+
+code()
+```
+
+Output source:
+
+```
+define(["jquery", "underscore"], function ($, _) {
+  code();
+});
+```
 
 
 ## Installation
