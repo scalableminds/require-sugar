@@ -23,6 +23,23 @@ describe("require-sugar", function() {
     });
   });
 
+  it("can transform a simple define block with windows line endings", function() {
+    var source = [
+      "",
+      "/* define",
+      " s/1 : t1",
+      " s2 : t2",
+      " s : t3",
+      " */",
+      "// other comment",
+      "logFn(t1, t2, t3);"
+    ];
+
+    sugarRun(source, "javascript.js", function (called, log, module) {
+      expect(log).toEqual(["s/1", "s2", "s"]);
+    }, true);
+  });
+
   it("ignores a define block which is not at the top of the file", function() {
     var source = [
       "code",
@@ -115,9 +132,13 @@ describe("require-sugar", function() {
 
   });
 
-  function sugarRun(sourceArray, fileName, callback) {
+  function sugarRun(sourceArray, fileName, callback, winLineEndings) {
 
-    var source = sourceArray.join("\n");
+    var lineEnding = "\n";
+    if (winLineEndings) {
+      lineEnding = "\r\n";
+    }
+    var source = sourceArray.join(lineEnding);
 
     var log = [];
     var called = false;
@@ -137,7 +158,13 @@ describe("require-sugar", function() {
       sugaredCode = coffee.compile(sugaredCode);
     }
 
-    eval(sugaredCode);
+    try {
+      eval(sugaredCode);
+    } catch (ex) {
+      console.log("sugaredCode",  sugaredCode)
+      throw ex;
+    }
+
 
     callback(called, log, module);
   }

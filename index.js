@@ -4,12 +4,13 @@ var applySourceMap = require('vinyl-sourcemaps-apply');
 var sourceMap = require('source-map');
 var charProps = require('char-props');
 
+var lineEnding;
 var matcher = {
-  jsComment : /^\s*(\/\*\s*define([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*\*+\/\n)/,
-  coffeeComment : /^\s*(###\s*define([^*]|[\r\n]|(\*+([^*\/]|[\r\n])))*?###\n)/,
-  iife : /^(.|\n)*?(\s*\(function\(\)\s*{)((.|\n)*)(}\)((\.call\(this\))|(\(\)));[\s\n]*)$/,
+  jsComment : /^\s*(\/\*\s*define([^*]|(\r?\n)|(\*+([^*\/]|(\r?\n))))*\*+\/\r?\n)/,
+  coffeeComment : /^\s*(###\s*define([^*]|(\r?\n)|(\*+([^*\/]|(\r?\n))))*?###\r?\n)/,
+  iife : /^(.|(\r?\n))*?(\s*\(function\(\)\s*{)((.|(\r?\n))*)(}\)((\.call\(this\))|(\(\)));(\s|(\r?\n))*)$/,
   getDependencyLine : function(global) {
-    var dependencyPath = "\\s*([^\"\\n\\s\\:]+)\\s*";
+    var dependencyPath = "\\s*([^\"\\r\\n\\s\\:]+)\\s*";
     return new RegExp(dependencyPath + ":" + dependencyPath, global ? "gm" : "m");
   },
   getComment : function(isCoffee) {
@@ -21,6 +22,7 @@ var matcher = {
   }
 };
 
+
 function sugar(options) {
   return function(source, filename) {
     source = source.toString();
@@ -29,6 +31,8 @@ function sugar(options) {
       console.warn("No filename provided. JavaScript is assumed.");
       filename = "";
     }
+
+    checkLineEndings(source);
 
     var isCoffee = isFileCoffee(filename);
     var indent = getIndent(options);
@@ -46,6 +50,16 @@ function sugar(options) {
 
     return wrapInDefine(cleanedSource, parameters, isCoffee);
   };
+}
+
+function checkLineEndings(source) {
+  var nCount = source.split("\n").length;
+  var rCount = source.split("\r").length;
+  if (nCount > 0 && nCount == rCount) {
+    lineEnding = "\r\n";
+  } else {
+    lineEnding = "\n";
+  }
 }
 
 function getIndent(options) {
@@ -85,13 +99,13 @@ function cleanSource(source, commentMatch, indent) {
 
   cleanedSource = unpackIIFE(cleanedSource);
   cleanedSource = cleanedSource
-    .split("\n")
+    .split(/\r?\n/)
     .map(function(line) {
       if (line === "")
         return line;
       return indent + line;
     })
-    .join("\n");
+    .join(lineEnding);
 
   return cleanedSource;
 }
@@ -100,9 +114,9 @@ function cleanSource(source, commentMatch, indent) {
 function wrapInDefine(source, parameters, isCoffee) {
   var codeAsFunction;
   if (isCoffee) {
-    codeAsFunction = "(" + parameters.targets + ") -> \n" + source + "\n";
+    codeAsFunction = "(" + parameters.targets + ") -> " + lineEnding + source + lineEnding;
   } else {
-    codeAsFunction = "function(" + parameters.targets + ") {\n" + source + "\n}";
+    codeAsFunction = "function(" + parameters.targets + ") {" + lineEnding + source + lineEnding + "}";
   }
 
   return "define([" + parameters.sources + "], " + codeAsFunction + ");";
@@ -126,7 +140,7 @@ function unpackIIFE(source) {
   var iffeeMatch = matcher.iife.exec(source);
 
   if (iffeeMatch) {
-    return iffeeMatch[3];
+    return iffeeMatch[4];
   } else {
     return source;
   }
@@ -164,7 +178,7 @@ function getMap(fileName, sourceName, originalSource, generatedSource, options) 
 
   var offset = orgCoords.line - (genCoords.line + 1);
 
-  var lineCount = generatedSource.split("\n").length;
+  var lineCount = generatedSource.split(/\r?\n/).length;
   for (var i = genCoords.line + 1; i < lineCount; i++) {
     map.addMapping({
       original: {
