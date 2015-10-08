@@ -63,7 +63,11 @@ function checkLineEndings(source) {
 }
 
 function getIndent(options) {
-  return options.indent || "  ";
+  if (options && typeof options.indent == "string") {
+    return options.indent;
+  } else {
+    return "  ";
+  }
 }
 
 function isFileCoffee(filename) {
