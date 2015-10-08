@@ -47,12 +47,19 @@ function sugar(options) {
 
     var cleanedSource = cleanSource(source, commentMatch, indent);
 
+
+    var longestTargetName = defines.targets.reduce(function (r, a) {
+      return Math.max(a.length, r);
+    }, 0);
+
     var importLines = [];
     for(var i = 0; i < defines.sources.length; i++) {
+      var target = defines.targets[i];
+      var targetSuffix = Array(longestTargetName - target.length + 1).join(" ");
       if (isCoffee) {
-        importLines.push(defines.targets[i] + " = require(\"" + defines.sources[i] + "\")");
+        importLines.push(target + targetSuffix + " = require(\"" + defines.sources[i] + "\")");
       } else {
-        importLines.push("var " + defines.targets[i] + " = require(\"" + defines.sources[i] + "\");");
+        importLines.push("var " + target + targetSuffix + " = require(\"" + defines.sources[i] + "\");");
       }
     }
 
