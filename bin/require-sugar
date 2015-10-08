@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+
+var sourcemaps = require("gulp-sourcemaps");
+var requireSugar = require("../index");
+var fs = require("fs");
+
+var filename = process.argv[2];
+
+console.log(requireSugar.sugar()(fs.readFileSync(filename), filename));
