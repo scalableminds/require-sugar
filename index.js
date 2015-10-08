@@ -46,9 +46,17 @@ function sugar(options) {
     var defines = getDefines(commentMatch);
 
     var cleanedSource = cleanSource(source, commentMatch, indent);
-    var parameters = getDefineParameters(defines.sources, defines.targets);
 
-    return wrapInDefine(cleanedSource, parameters, isCoffee);
+    var importLines = [];
+    for(var i = 0; i < defines.sources.length; i++) {
+      if (isCoffee) {
+        importLines.push(defines.targets[i] + " = require(\"" + defines.sources[i] + "\")");
+      } else {
+        importLines.push("var " + defines.targets[i] + " = require(\"" + defines.sources[i] + "\");");
+      }
+    }
+
+    return importLines.join("\n") + "\n" + cleanedSource;
   };
 }
 
@@ -63,7 +71,11 @@ function checkLineEndings(source) {
 }
 
 function getIndent(options) {
-  return options.indent || "  ";
+  if (options && typeof options.indent == "string") {
+    return options.indent;
+  } else {
+    return "  ";
+  }
 }
 
 function isFileCoffee(filename) {
@@ -91,13 +103,12 @@ function getDefines(commentMatch) {
 
 
 function cleanSource(source, commentMatch, indent) {
-  // removes the define comment, unpacks potential IIFE and indents the code
+  // removes the define comment and indents the code
 
   var cleanedSource =
     source.slice(0, commentMatch.index) +
     source.slice(commentMatch.index + commentMatch[0].length);
 
-  cleanedSource = unpackIIFE(cleanedSource);
   cleanedSource = cleanedSource
     .split(/\r?\n/)
     .map(function(line) {

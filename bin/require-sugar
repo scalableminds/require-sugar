@@ -4,6 +4,13 @@ var sourcemaps = require("gulp-sourcemaps");
 var requireSugar = require("../index");
 var fs = require("fs");
 
-var filename = process.argv[2];
+var inFilename = process.argv[2];
+var outFilename = process.argv[3];
 
-console.log(requireSugar.sugar()(fs.readFileSync(filename), filename));
+var output = requireSugar.sugar({ indent: "" })(fs.readFileSync(inFilename, "utf8"), inFilename);
+
+if (typeof outFilename == "undefined") {
+  process.stdout.write(output);
+} else {
+  fs.writeFileSync(outFilename, output, "utf8");
+}
